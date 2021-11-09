@@ -1,7 +1,13 @@
 {
   "name": "dane.js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A modern web MVC framework for Node.js",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "npx tsc --watch",
+    "watch": "nodemon server.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dane-js/dane.js.git"
@@ -19,5 +25,10 @@
   "bugs": {
     "url": "https://github.com/dane-js/dane.js/issues"
   },
-  "homepage": "https://github.com/dane-js/dane.js#readme"
+  "homepage": "https://github.com/dane-js/dane.js#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "php-in-js": "^1.0.1"
+  }
 }
