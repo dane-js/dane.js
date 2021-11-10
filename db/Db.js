@@ -18,7 +18,10 @@ const path = require('path');
 module.exports = (_a = class Db {
         static initialize($path) {
             const models = {};
-            const connection = __classPrivateFieldGet(Db, _a, "m", _Db_connect).call(Db, $path);
+            const connection = __classPrivateFieldGet(this, _a, "m", _Db_connect).call(this, $path);
+            if (connection === false) {
+                return models;
+            }
             fs.readdirSync($path.MODEL_DIR).filter((file) => {
                 return (file.indexOf('.') !== 0) && (file.slice(-3) === '.js' && !file.startsWith('AppModel'));
             })
@@ -40,15 +43,18 @@ module.exports = (_a = class Db {
             return models;
         }
         static getConfig($path) {
-            return require(path.join($path.CONFIG_DIR, '/database'))[process.env.NODE_ENV || 'development'];
+            const config = require(path.join($path.CONFIG_DIR, '/database'));
+            return Object.assign({ enabled: config.enable || false }, config[process.env.NODE_ENV || 'development']);
         }
     },
     _Db_connect = function _Db_connect($path) {
         if (__classPrivateFieldGet(this, _a, "f", _Db_db) !== null) {
             return __classPrivateFieldGet(this, _a, "f", _Db_db);
         }
-        const env = process.env.NODE_ENV || 'development';
         const config = this.getConfig($path);
+        if (config.enabled === false) {
+            return false;
+        }
         __classPrivateFieldSet(this, _a, new Sequelize(config.database, config.username, config.password, {
             host: config.hostname,
             dialect: config.dialect,
