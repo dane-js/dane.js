@@ -49,12 +49,19 @@ module.exports = (_a = class Kernel {
             });
             const { port, host } = require(`${__classPrivateFieldGet(this, _Kernel_path, "f").CONFIG_DIR}/env`);
             server.listen(port, host, () => __awaiter(this, void 0, void 0, function* () {
-                const config = Db.getConfig(__classPrivateFieldGet(this, _Kernel_path, "f"));
-                if (config.sync) {
-                    yield models.sequelize.sync({ alter: true });
-                }
+                yield this.sync(models);
                 console.log(`Le serveur a demarré sur l\'hôte http://${host}:${port}`);
             }));
+        }
+        sync(models) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const config = Db.getConfig(__classPrivateFieldGet(this, _Kernel_path, "f"));
+                if (config.sync) {
+                    if ('sequelize' in models) {
+                        yield models.sequelize.sync({ alter: true });
+                    }
+                }
+            });
         }
     },
     _Kernel_path = new WeakMap(),

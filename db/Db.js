@@ -10,8 +10,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _a, _Db_db, _Db_connect, _Db_createModel;
-const { DataTypes, Sequelize, Op } = require('sequelize');
+var _a, _Db_db, _Db_sequelizeOptions, _Db_connect, _Db_createModel;
 const { ucfirst } = require('php-in-js/modules/string');
 const fs = require('fs');
 const path = require('path');
@@ -38,8 +37,8 @@ module.exports = (_a = class Db {
                 }
             });
             models.sequelize = connection;
-            models.Sequelize = Sequelize;
-            models.Op = Op;
+            models.Sequelize = __classPrivateFieldGet(this, _a, "f", _Db_sequelizeOptions).Sequelize;
+            models.Op = __classPrivateFieldGet(this, _a, "f", _Db_sequelizeOptions).Op;
             return models;
         }
         static getConfig($path) {
@@ -55,16 +54,18 @@ module.exports = (_a = class Db {
         if (config.enabled === false) {
             return false;
         }
+        const { DataTypes, Sequelize, Op } = require('sequelize');
         __classPrivateFieldSet(this, _a, new Sequelize(config.database, config.username, config.password, {
             host: config.hostname,
             dialect: config.dialect,
             logging: config.logging === true ? console.log : false
         }), "f", _Db_db);
+        __classPrivateFieldSet(this, _a, { DataTypes, Sequelize, Op }, "f", _Db_sequelizeOptions);
         return __classPrivateFieldGet(this, _a, "f", _Db_db);
     },
     _Db_createModel = function _Db_createModel($path, file) {
         const m = require(path.join($path.MODEL_DIR, file));
-        const model = new m(DataTypes, Sequelize, Op);
+        const model = new m(__classPrivateFieldGet(this, _a, "f", _Db_sequelizeOptions).DataTypes, __classPrivateFieldGet(this, _a, "f", _Db_sequelizeOptions).Sequelize, __classPrivateFieldGet(this, _a, "f", _Db_sequelizeOptions).Op);
         file = file.replace('.js', '').replace(/Model$/i, '');
         if (null == model.getModelName()) {
             model.setModelName(ucfirst(file));
@@ -75,4 +76,5 @@ module.exports = (_a = class Db {
         return model;
     },
     _Db_db = { value: null },
+    _Db_sequelizeOptions = { value: null },
     _a);
