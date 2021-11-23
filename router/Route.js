@@ -13,24 +13,32 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _Route_matches, _Route_params, _a;
+var _Route_instances, _Route_matches, _Route_PATH, _Route_params, _Route_middlewares, _Route_runApp, _Route_makeMiddlewares, _Route_launch, _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-const Router = require('./Router');
 const fs_1 = __importDefault(require("fs"));
 const { trim } = require('php-in-js/modules/string');
 const { call_user_func_array } = require('php-in-js/modules/functions');
+const launcher = require('./launcher');
 module.exports = (_a = class Route {
-        constructor(path, callable) {
+        constructor(path, callable, middlewares) {
+            _Route_instances.add(this);
             /**
              * @var {Array}
              */
             _Route_matches.set(this, []);
+            _Route_PATH.set(this, {});
             /**
              * @var {Object}
              */
             _Route_params.set(this, {});
+            _Route_middlewares.set(this, []);
             this.path = trim(path, '/');
             this.callable = callable;
+            __classPrivateFieldSet(this, _Route_middlewares, __classPrivateFieldGet(this, _Route_instances, "m", _Route_makeMiddlewares).call(this, middlewares), "f");
+        }
+        setPATH(path) {
+            __classPrivateFieldSet(this, _Route_PATH, path, "f");
+            return this;
         }
         /**
          *
@@ -41,6 +49,9 @@ module.exports = (_a = class Route {
         with(param, regex) {
             __classPrivateFieldSet(this, _Route_params, Object.assign(Object.assign({}, __classPrivateFieldGet(this, _Route_params, "f")), { [param]: regex.replace('(', '(?:') }), "f");
             return this;
+        }
+        getPath() {
+            return this.path;
         }
         /**
          * Verifie si une route matche une URL
@@ -75,30 +86,30 @@ module.exports = (_a = class Route {
          * @param {*} res
          * @returns
          */
-        call(router, path, req, res) {
-            let params = __classPrivateFieldGet(this, _Route_matches, "f");
-            params.push(...[req, res]);
-            if (this.callable instanceof Function) {
-                return call_user_func_array(this.callable, params);
+        call(router, path, app, reqe, rese) {
+            return __classPrivateFieldGet(this, _Route_instances, "m", _Route_runApp).call(this, router, path, reqe, rese);
+            /*
+            const middlewares =  this.getMiddlewares()
+            if (!middlewares.length ) {
             }
-            const parts = this.callable.split('@');
-            let controller = parts.shift();
-            if (!(controller === null || controller === void 0 ? void 0 : controller.endsWith('Controller'))) {
-                controller += 'Controller';
-            }
-            let method = parts.shift();
-            if (method == undefined || typeof method == 'undefined' || method == null) {
-                method = router.getDefaultMethod();
-            }
-            if (!fs_1.default.existsSync(`${path.CONTROLLER_DIR}/${controller}.js`)) {
-                throw Error('Controller file "' + controller + '.js" do not exist');
-            }
-            const classe = require(`${path.CONTROLLER_DIR}/${controller}`);
-            const obj = new classe(path);
-            if (!(method in obj)) {
-                throw Error(`Methode "${method}" non definie dans le controleur ${controller}`);
-            }
-            return call_user_func_array([obj, method], params);
+            if (app) {
+                middlewares.forEach(middleware => {
+                    app.use(middleware)
+                })
+                app.use((req :any, res :any) => {
+                    return this.#runApp(router, path, req, res)
+                })
+            } */
+        }
+        use(middlewares) {
+            __classPrivateFieldGet(this, _Route_middlewares, "f").push(...__classPrivateFieldGet(this, _Route_instances, "m", _Route_makeMiddlewares).call(this, middlewares));
+            return this;
+        }
+        getMiddlewares() {
+            return __classPrivateFieldGet(this, _Route_middlewares, "f");
+        }
+        getRunner(models, req, res, next) {
+            return __classPrivateFieldGet(this, _Route_instances, "m", _Route_launch).call(this, models, req, res);
         }
         /**
          * Genere l'url d'une route avec les parametres
@@ -115,5 +126,67 @@ module.exports = (_a = class Route {
         }
     },
     _Route_matches = new WeakMap(),
+    _Route_PATH = new WeakMap(),
     _Route_params = new WeakMap(),
+    _Route_middlewares = new WeakMap(),
+    _Route_instances = new WeakSet(),
+    _Route_runApp = function _Route_runApp(router, path, req, res) {
+        let params = __classPrivateFieldGet(this, _Route_matches, "f");
+        params.push(...[req, res]);
+        if (this.callable instanceof Function) {
+            return call_user_func_array(this.callable, params);
+        }
+        const parts = this.callable.split('@');
+        let controller = parts.shift();
+        if (!(controller === null || controller === void 0 ? void 0 : controller.endsWith('Controller'))) {
+            controller += 'Controller';
+        }
+        let method = parts.shift();
+        if (method == undefined || typeof method == 'undefined' || method == null) {
+            method = router.getDefaultMethod();
+        }
+        if (!fs_1.default.existsSync(`${path.CONTROLLER_DIR}/${controller}.js`)) {
+            throw Error('Controller file "' + controller + '.js" do not exist');
+        }
+        const classe = require(`${path.CONTROLLER_DIR}/${controller}`);
+        const obj = new classe(path);
+        if (!(method in obj)) {
+            throw Error(`Methode "${method}" non definie dans le controleur ${controller}`);
+        }
+        return call_user_func_array([obj, method], params);
+    },
+    _Route_makeMiddlewares = function _Route_makeMiddlewares(middlewares) {
+        if (middlewares == null || middlewares === undefined || typeof middlewares == 'undefined') {
+            return [];
+        }
+        if (typeof middlewares == 'function') {
+            return [middlewares];
+        }
+        if (typeof middlewares == 'string') {
+            if (fs_1.default.existsSync(`${__classPrivateFieldGet(this, _Route_PATH, "f").MIDDLEWARE_DIR}/${middlewares}.js`)) {
+                const middleware = require(`${__classPrivateFieldGet(this, _Route_PATH, "f").MIDDLEWARE_DIR}/${middlewares}.js`);
+                return [middleware];
+            }
+            return [];
+        }
+        const result = [];
+        middlewares.forEach(middleware => {
+            if (typeof middleware == 'function') {
+                result.push(middleware);
+            }
+            else if (fs_1.default.existsSync(`${__classPrivateFieldGet(this, _Route_PATH, "f").MIDDLEWARE_DIR}/${middleware}.js`)) {
+                const middle = require(`${__classPrivateFieldGet(this, _Route_PATH, "f").MIDDLEWARE_DIR}/${middleware}.js`);
+                result.push(middle);
+            }
+        });
+        return result;
+    },
+    _Route_launch = function _Route_launch(models, req, res) {
+        let params = __classPrivateFieldGet(this, _Route_matches, "f");
+        params.push(...[req, res]);
+        if (this.callable instanceof Function) {
+            return call_user_func_array(this.callable, [req, res]);
+        }
+        return launcher(this.callable.split('@'), req, res, __classPrivateFieldGet(this, _Route_PATH, "f"), models);
+    },
     _a);

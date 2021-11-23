@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Message = require('./Message');
+const { completeAssign } = require('../utils/objects');
 module.exports = class Request extends Message {
     /**
      * Retrieve server parameters.
@@ -16,8 +17,25 @@ module.exports = class Request extends Message {
      * @return {object}
      */
     getCookieParams() {
-        var _a;
-        return (_a = this._req.cookies) === null || _a === void 0 ? void 0 : _a.name;
+        return this._req.cookies || {};
+    }
+    /**
+     *
+     * @param name
+     * @returns
+     */
+    getCookies(name) {
+        const cookies = this.getCookieParams();
+        if (typeof name === 'string') {
+            return cookies[name] || null;
+        }
+        const result = {};
+        name.forEach(key => {
+            if (cookies[key]) {
+                result[key] = cookies[key];
+            }
+        });
+        return result;
     }
     /**
      * Return an instance with the specified cookies.
@@ -26,7 +44,11 @@ module.exports = class Request extends Message {
      * @return static
      */
     withCookieParams(cookies) {
-        return this;
+        const clone = completeAssign({}, this);
+        cookies.forEach(cookie => {
+            clone._res.cookie(cookie.name, cookie.value, cookie.options);
+        });
+        return clone;
     }
     /**
      * Retrieve query string arguments.

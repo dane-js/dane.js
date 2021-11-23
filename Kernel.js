@@ -22,32 +22,34 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _Kernel_path, _a;
+var _Kernel_instances, _Kernel_PATH, _Kernel_initializeApp, _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const cookieParser = require('cookie-parser');
 const http = require('http');
 const Dispatcher = require('./router/Dispatcher');
+const Router = require('./router/Router');
 const Db = require('./db/Db');
+const fs = require('fs');
 module.exports = (_a = class Kernel {
         constructor(path) {
-            _Kernel_path.set(this, {
+            _Kernel_instances.add(this);
+            _Kernel_PATH.set(this, {
                 STATIC_DIR: '',
                 CONFIG_DIR: ''
             });
-            __classPrivateFieldSet(this, _Kernel_path, Object.assign(Object.assign({}, __classPrivateFieldGet(this, _Kernel_path, "f")), path), "f");
+            __classPrivateFieldSet(this, _Kernel_PATH, Object.assign(Object.assign({}, __classPrivateFieldGet(this, _Kernel_PATH, "f")), path), "f");
         }
         init() {
             const app = (0, express_1.default)();
             const server = http.Server(app);
-            const models = Db.initialize(__classPrivateFieldGet(this, _Kernel_path, "f"));
-            const dispatcher = new Dispatcher(__classPrivateFieldGet(this, _Kernel_path, "f"), models);
-            app.use('/static', express_1.default.static(__classPrivateFieldGet(this, _Kernel_path, "f").STATIC_DIR));
+            const models = Db.initialize(__classPrivateFieldGet(this, _Kernel_PATH, "f"));
+            app.use(cookieParser());
+            app.use('/static', express_1.default.static(__classPrivateFieldGet(this, _Kernel_PATH, "f").STATIC_DIR));
             app.use(express_1.default.urlencoded({ extended: true }));
             app.use(express_1.default.json({ limit: '250mb' }));
-            app.use('/', function (req, res, next) {
-                return dispatcher.dispatch(req, res, next);
-            });
-            const { port, host } = require(`${__classPrivateFieldGet(this, _Kernel_path, "f").CONFIG_DIR}/env`);
+            __classPrivateFieldGet(this, _Kernel_instances, "m", _Kernel_initializeApp).call(this, app, models);
+            const { port, host } = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/env`);
             server.listen(port, host, () => __awaiter(this, void 0, void 0, function* () {
                 yield this.sync(models);
                 console.log(`Le serveur a demarré sur l\'hôte http://${host}:${port}`);
@@ -55,7 +57,7 @@ module.exports = (_a = class Kernel {
         }
         sync(models) {
             return __awaiter(this, void 0, void 0, function* () {
-                const config = Db.getConfig(__classPrivateFieldGet(this, _Kernel_path, "f"));
+                const config = Db.getConfig(__classPrivateFieldGet(this, _Kernel_PATH, "f"));
                 if (config.sync) {
                     if ('sequelize' in models) {
                         yield models.sequelize.sync({ alter: true });
@@ -64,5 +66,23 @@ module.exports = (_a = class Kernel {
             });
         }
     },
-    _Kernel_path = new WeakMap(),
+    _Kernel_PATH = new WeakMap(),
+    _Kernel_instances = new WeakSet(),
+    _Kernel_initializeApp = function _Kernel_initializeApp(app, models) {
+        const router = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/routes.js`)(new Router(__classPrivateFieldGet(this, _Kernel_PATH, "f")));
+        const routes = router.getAllRoutes();
+        for (let key in routes) {
+            if (key == 'get') {
+                routes.get.forEach(route => {
+                    app.get(`/${route.getPath()}`, ...route.getMiddlewares(), function (req, res, next) {
+                        return route.getRunner(models, req, res, next);
+                    });
+                });
+            }
+        }
+        const dispatcher = new Dispatcher(__classPrivateFieldGet(this, _Kernel_PATH, "f"), models);
+        app.use(function (req, res, next) {
+            return dispatcher.dispatch(req, res, next);
+        });
+    },
     _a);

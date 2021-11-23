@@ -12,10 +12,9 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 var _Dispatcher_router, _Dispatcher_path, _Dispatcher_models, _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs = require('fs');
-const { call_user_func_array } = require('php-in-js/modules/functions');
-const { trim, ucfirst } = require('php-in-js/modules/string');
+const { trim } = require('php-in-js/modules/string');
 const Router = require('./Router');
+const launcher = require('./launcher');
 module.exports = (_a = class Dispatcher {
         constructor(path, models) {
             /**
@@ -32,47 +31,12 @@ module.exports = (_a = class Dispatcher {
             __classPrivateFieldSet(this, _Dispatcher_models, models, "f");
         }
         dispatch(req, res, next) {
-            const routes = __classPrivateFieldGet(this, _Dispatcher_router, "f").getRoutes(req.method);
-            if (!routes) {
-                throw Error('REQUEST_METHOD does not exist');
+            const URL = req.path;
+            if (false === __classPrivateFieldGet(this, _Dispatcher_router, "f").getAutoRoute()) {
+                throw Error('Not routes found for this URL');
             }
-            let routeMached = false;
-            for (let i = 0; i < routes.length; i++) {
-                const route = routes[i];
-                if (route.match(req.url)) {
-                    routeMached = true;
-                    return route.call(__classPrivateFieldGet(this, _Dispatcher_router, "f"), __classPrivateFieldGet(this, _Dispatcher_path, "f"), req, res);
-                }
-            }
-            if (!routeMached) {
-                if (false === __classPrivateFieldGet(this, _Dispatcher_router, "f").getAutoRoute()) {
-                    throw Error('Not routes found for this URL');
-                }
-                else {
-                    let parts = trim(req.url, '/').split('/');
-                    let controller = parts.shift();
-                    if (controller.toLowerCase() !== 'favicon.ico') {
-                        if (!controller.endsWith('Controller')) {
-                            controller += 'Controller';
-                        }
-                        controller = ucfirst(controller);
-                        let method = parts.shift();
-                        if (!method || typeof method == 'undefined' || method == null) {
-                            method = __classPrivateFieldGet(this, _Dispatcher_router, "f").getDefaultMethod();
-                        }
-                        if (!fs.existsSync(`${__classPrivateFieldGet(this, _Dispatcher_path, "f").CONTROLLER_DIR}/${controller}.js`)) {
-                            throw Error(`Controller file "${__classPrivateFieldGet(this, _Dispatcher_path, "f").CONTROLLER_DIR}/${controller}.js" do not exist`);
-                        }
-                        const params = [...parts, req, res];
-                        const classe = require(`${__classPrivateFieldGet(this, _Dispatcher_path, "f").CONTROLLER_DIR}/${controller}`);
-                        const obj = new classe(__classPrivateFieldGet(this, _Dispatcher_path, "f"));
-                        obj.initialize(req, res, __classPrivateFieldGet(this, _Dispatcher_models, "f"));
-                        if (!(method in obj)) {
-                            throw Error(`Methode "${method}" non definie dans le controleur ${controller}`);
-                        }
-                        return call_user_func_array([obj, method], params);
-                    }
-                }
+            else {
+                return launcher(trim(URL, '/').split('/'), req, res, __classPrivateFieldGet(this, _Dispatcher_path, "f"), __classPrivateFieldGet(this, _Dispatcher_models, "f"), __classPrivateFieldGet(this, _Dispatcher_router, "f"));
             }
         }
     },
