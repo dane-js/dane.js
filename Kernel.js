@@ -27,10 +27,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cookieParser = require('cookie-parser');
 const http = require('http');
+const cors = require('cors');
 const Dispatcher = require('./router/Dispatcher');
 const Router = require('./router/Router');
 const Db = require('./db/Db');
-const fs = require('fs');
 module.exports = (_a = class Kernel {
         constructor(path) {
             _Kernel_instances.add(this);
@@ -44,6 +44,8 @@ module.exports = (_a = class Kernel {
             const app = (0, express_1.default)();
             const server = http.Server(app);
             const models = Db.initialize(__classPrivateFieldGet(this, _Kernel_PATH, "f"));
+            const corsOptions = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/cors`);
+            app.use(cors(corsOptions));
             app.use(cookieParser());
             app.use('/static', express_1.default.static(__classPrivateFieldGet(this, _Kernel_PATH, "f").STATIC_DIR));
             app.use(express_1.default.urlencoded({ extended: true }));
@@ -72,13 +74,27 @@ module.exports = (_a = class Kernel {
         const router = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/routes.js`)(new Router(__classPrivateFieldGet(this, _Kernel_PATH, "f")));
         const routes = router.getAllRoutes();
         for (let key in routes) {
-            if (key == 'get') {
-                routes.get.forEach(route => {
-                    app.get(`/${route.getPath()}`, ...route.getMiddlewares(), function (req, res, next) {
-                        return route.getRunner(models, req, res, next);
-                    });
-                });
-            }
+            routes[key].forEach(route => {
+                const middlewares = route.getMiddlewares();
+                const runner = function (req, res, next) {
+                    return route.getRunner(models, req, res, next);
+                };
+                if (key == 'delete') {
+                    app.delete(`/${route.getPath()}`, ...middlewares, runner);
+                }
+                if (key == 'get') {
+                    app.get(`/${route.getPath()}`, ...middlewares, runner);
+                }
+                if (key == 'head') {
+                    app.head(`/${route.getPath()}`, ...middlewares, runner);
+                }
+                if (key == 'post') {
+                    app.post(`/${route.getPath()}`, ...middlewares, runner);
+                }
+                if (key == 'put') {
+                    app.put(`/${route.getPath()}`, ...middlewares, runner);
+                }
+            });
         }
         const dispatcher = new Dispatcher(__classPrivateFieldGet(this, _Kernel_PATH, "f"), models);
         app.use(function (req, res, next) {
