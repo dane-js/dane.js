@@ -34,7 +34,8 @@ module.exports = (_a = class BaseModel {
         getTableName() {
             return this.tableName;
         }
-        static associate(models) {
+        associate(models) {
+            return models;
         }
         make(connection) {
             return connection.define(this.modelName, this.schema, __classPrivateFieldGet(this, _BaseModel_instances, "m", _BaseModel_formatOptions).call(this));

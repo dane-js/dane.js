@@ -16,7 +16,8 @@ const fs = require('fs');
 const path = require('path');
 module.exports = (_a = class Db {
         static initialize($path) {
-            const models = {};
+            let models = {};
+            const trueModels = {};
             const connection = __classPrivateFieldGet(this, _a, "m", _Db_connect).call(this, $path);
             if (connection === false) {
                 return models;
@@ -29,12 +30,11 @@ module.exports = (_a = class Db {
                 const name = model.getModelName();
                 if (name) {
                     models[name] = model.make(connection);
+                    trueModels[name] = model;
                 }
             });
-            Object.keys(models).forEach(modelName => {
-                if ('associate' in models[modelName]) {
-                    models[modelName].associate(models);
-                }
+            Object.keys(models).forEach(name => {
+                models = Object.assign(Object.assign({}, models), trueModels[name].associate(models));
             });
             models.sequelize = connection;
             models.Sequelize = __classPrivateFieldGet(this, _a, "f", _Db_sequelizeOptions).Sequelize;
