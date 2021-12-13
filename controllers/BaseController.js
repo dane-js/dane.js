@@ -9,11 +9,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Request = require('../http/Request');
 const Response = require('../http/Response');
 const fs = require('fs');
-const { in_array } = require('php-in-js/modules/array');
-const { ucfirst } = require('php-in-js/modules/string');
+const pij = require('php-in-js/cjs');
 module.exports = (_a = class BaseController {
         constructor(path) {
             _BaseController_instances.add(this);
+            this.pij = pij;
             this.request = null;
             this.response = null;
             this.db = {};
@@ -41,9 +41,9 @@ module.exports = (_a = class BaseController {
     _BaseController_initDb = function _BaseController_initDb(models) {
         this.db = models;
         for (let k in models) {
-            if (!in_array(k, ['sequelize', 'Sequelize', 'Op', 'DataTypes'])) {
+            if (!this.pij.in_array(k, ['sequelize', 'Sequelize', 'Op', 'DataTypes'])) {
                 Object.defineProperties(this, {
-                    [`${ucfirst(k)}Model`]: { get: function () { return models[k]; } }
+                    [`${this.pij.ucfirst(k)}Model`]: { get: function () { return models[k]; } }
                 });
             }
         }

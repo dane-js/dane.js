@@ -29,9 +29,9 @@ module.exports = class Response extends Message {
         status = (status && is_int(status)) ? status : 200;
         return this.send({
             success: true,
+            status,
             message,
             result,
-            status
         }, status);
     }
     /**
