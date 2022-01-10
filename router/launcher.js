@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require('fs');
 const { call_user_func_array } = require('php-in-js/modules/functions');
-const { trim, ucfirst } = require('php-in-js/modules/string');
+const { ucfirst } = require('php-in-js/modules/string');
 const { empty } = require('php-in-js/modules/types');
 module.exports = (parts, req, res, path, models, router) => {
     let controller = parts.shift();

@@ -11,6 +11,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
 var _a, _Db_db, _Db_sequelizeOptions, _Db_connect, _Db_createModel;
+Object.defineProperty(exports, "__esModule", { value: true });
 const { ucfirst } = require('php-in-js/modules/string');
 const fs = require('fs');
 const path = require('path');
@@ -22,17 +23,19 @@ module.exports = (_a = class Db {
             if (connection === false) {
                 return models;
             }
-            fs.readdirSync($path.MODEL_DIR).filter((file) => {
-                return (file.indexOf('.') !== 0) && (file.slice(-3) === '.js' && !file.startsWith('AppModel'));
-            })
-                .forEach((file) => {
-                const model = __classPrivateFieldGet(this, _a, "m", _Db_createModel).call(this, $path, file);
-                const name = model.getModelName();
-                if (name) {
-                    models[name] = model.make(connection);
-                    trueModels[name] = model;
-                }
-            });
+            if (fs.existsSync($path.MODEL_DIR)) {
+                fs.readdirSync($path.MODEL_DIR).filter((file) => {
+                    return (file.indexOf('.') !== 0) && (file.slice(-3) === '.js' && !file.startsWith('AppModel'));
+                })
+                    .forEach((file) => {
+                    const model = __classPrivateFieldGet(this, _a, "m", _Db_createModel).call(this, $path, file);
+                    const name = model.getModelName();
+                    if (name) {
+                        models[name] = model.make(connection);
+                        trueModels[name] = model;
+                    }
+                });
+            }
             Object.keys(models).forEach(name => {
                 models = Object.assign(Object.assign({}, models), trueModels[name].associate(models));
             });

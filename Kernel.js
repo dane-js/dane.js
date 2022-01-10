@@ -36,7 +36,13 @@ module.exports = (_a = class Kernel {
             _Kernel_instances.add(this);
             _Kernel_PATH.set(this, {
                 STATIC_DIR: '',
-                CONFIG_DIR: ''
+                CONFIG_DIR: '',
+                CONTROLLER_DIR: '',
+                MIDDLEWARES_DIR: '',
+                MODEL_DIR: '',
+                PLUGIN_DIR: '',
+                REPOSITORY_DIR: '',
+                VIEW_DIR: '',
             });
             __classPrivateFieldSet(this, _Kernel_PATH, Object.assign(Object.assign({}, __classPrivateFieldGet(this, _Kernel_PATH, "f")), path), "f");
         }
