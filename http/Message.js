@@ -33,7 +33,7 @@ module.exports = (_a = class Message {
          *     for that header.
          */
         getHeaders() {
-            return [];
+            return this._req.headers;
         }
         /**
          * Checks if a header exists by the given case-insensitive name.
@@ -55,7 +55,16 @@ module.exports = (_a = class Message {
          *    return an empty array.
          */
         getHeader(name) {
-            return [name];
+            const headers = this.getHeaders();
+            name = name.toLowerCase();
+            const header = headers[name];
+            if (!header) {
+                return [];
+            }
+            if (typeof header === 'string') {
+                return [header];
+            }
+            return header;
         }
         /**
          * Retrieves a comma-separated string of the values for a single header.
@@ -66,7 +75,7 @@ module.exports = (_a = class Message {
          *    the message, this method MUST return an empty string.
          */
         getHeaderLine(name) {
-            return name;
+            return this.getHeader(name).join(', ');
         }
         /**
          * Return an instance with the provided value replacing the specified header.
