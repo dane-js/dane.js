@@ -35,7 +35,7 @@ module.exports = class BaseRepository {
      * @param {object} where
      * @return {boolean}
      */
-    exists(where) {
+    exist(where) {
         return __awaiter(this, void 0, void 0, function* () {
             return (yield this.model.count({ where })) > 0;
         });
