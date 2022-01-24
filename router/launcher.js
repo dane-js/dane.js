@@ -24,6 +24,7 @@ module.exports = (parts, req, res, path, models, router) => {
         if (empty(method)) {
             method = 'index';
         }
+        method = method.replace(/-/g, '_');
         if (!fs.existsSync(`${path.CONTROLLER_DIR}/${controller}.js`)) {
             throw Error(`Controller file "${path.CONTROLLER_DIR}/${controller}.js" do not exist`);
         }
