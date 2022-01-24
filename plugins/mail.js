@@ -96,10 +96,10 @@ module.exports = function (config) {
             let transporter = nodemailer.createTransport({
                 host: config.host,
                 port: config.port,
-                secure: false,
+                secure: config.port == 465,
                 auth: {
                     user: config.username,
-                    pass: config.password, // generated ethereal password
+                    pass: config.password,
                 },
             });
             let message = {
