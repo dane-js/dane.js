@@ -13,7 +13,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _Route_instances, _Route_matches, _Route_PATH, _Route_params, _Route_middlewares, _Route_runApp, _Route_makeMiddlewares, _Route_launch, _a;
+var _Route_instances, _Route_matches, _Route_PATH, _Route_params, _Route_middlewares, _Route_runApp, _Route_launch, _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const { trim } = require('php-in-js/modules/string');
@@ -34,7 +34,7 @@ module.exports = (_a = class Route {
             _Route_middlewares.set(this, []);
             this.path = trim(path, '/');
             this.callable = callable;
-            __classPrivateFieldSet(this, _Route_middlewares, __classPrivateFieldGet(this, _Route_instances, "m", _Route_makeMiddlewares).call(this, middlewares), "f");
+            __classPrivateFieldSet(this, _Route_middlewares, Route.makeMiddlewares(__classPrivateFieldGet(this, _Route_PATH, "f"), middlewares), "f");
         }
         setPATH(path) {
             __classPrivateFieldSet(this, _Route_PATH, path, "f");
@@ -102,8 +102,34 @@ module.exports = (_a = class Route {
             } */
         }
         use(middlewares) {
-            __classPrivateFieldGet(this, _Route_middlewares, "f").push(...__classPrivateFieldGet(this, _Route_instances, "m", _Route_makeMiddlewares).call(this, middlewares));
+            __classPrivateFieldGet(this, _Route_middlewares, "f").push(...Route.makeMiddlewares(__classPrivateFieldGet(this, _Route_PATH, "f"), middlewares));
             return this;
+        }
+        static makeMiddlewares($path, middlewares) {
+            if (middlewares == null || middlewares === undefined || typeof middlewares == 'undefined') {
+                return [];
+            }
+            if (typeof middlewares == 'function') {
+                return [middlewares];
+            }
+            if (typeof middlewares == 'string') {
+                if (fs_1.default.existsSync(`${$path.MIDDLEWARE_DIR}/${middlewares}.js`)) {
+                    const middleware = require(`${$path.MIDDLEWARE_DIR}/${middlewares}.js`);
+                    return [middleware];
+                }
+                return [];
+            }
+            const result = [];
+            middlewares.forEach(middleware => {
+                if (typeof middleware == 'function') {
+                    result.push(middleware);
+                }
+                else if (fs_1.default.existsSync(`${$path.MIDDLEWARE_DIR}/${middleware}.js`)) {
+                    const middle = require(`${$path.MIDDLEWARE_DIR}/${middleware}.js`);
+                    result.push(middle);
+                }
+            });
+            return result;
         }
         getMiddlewares() {
             return __classPrivateFieldGet(this, _Route_middlewares, "f");
@@ -154,32 +180,6 @@ module.exports = (_a = class Route {
             throw Error(`Methode "${method}" non definie dans le controleur ${controller}`);
         }
         return call_user_func_array([obj, method], params);
-    },
-    _Route_makeMiddlewares = function _Route_makeMiddlewares(middlewares) {
-        if (middlewares == null || middlewares === undefined || typeof middlewares == 'undefined') {
-            return [];
-        }
-        if (typeof middlewares == 'function') {
-            return [middlewares];
-        }
-        if (typeof middlewares == 'string') {
-            if (fs_1.default.existsSync(`${__classPrivateFieldGet(this, _Route_PATH, "f").MIDDLEWARE_DIR}/${middlewares}.js`)) {
-                const middleware = require(`${__classPrivateFieldGet(this, _Route_PATH, "f").MIDDLEWARE_DIR}/${middlewares}.js`);
-                return [middleware];
-            }
-            return [];
-        }
-        const result = [];
-        middlewares.forEach(middleware => {
-            if (typeof middleware == 'function') {
-                result.push(middleware);
-            }
-            else if (fs_1.default.existsSync(`${__classPrivateFieldGet(this, _Route_PATH, "f").MIDDLEWARE_DIR}/${middleware}.js`)) {
-                const middle = require(`${__classPrivateFieldGet(this, _Route_PATH, "f").MIDDLEWARE_DIR}/${middleware}.js`);
-                result.push(middle);
-            }
-        });
-        return result;
     },
     _Route_launch = function _Route_launch(models, req, res) {
         let params = __classPrivateFieldGet(this, _Route_matches, "f");

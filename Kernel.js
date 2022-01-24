@@ -30,6 +30,7 @@ const http = require('http');
 const cors = require('cors');
 const Dispatcher = require('./router/Dispatcher');
 const Router = require('./router/Router');
+const Route = require('./router/Route');
 const Db = require('./db/Db');
 module.exports = (_a = class Kernel {
         constructor(path) {
@@ -77,6 +78,8 @@ module.exports = (_a = class Kernel {
     _Kernel_PATH = new WeakMap(),
     _Kernel_instances = new WeakSet(),
     _Kernel_initializeApp = function _Kernel_initializeApp(app, models) {
+        const app_middlewares = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/middlewares.js`)([]);
+        app.use(...Route.makeMiddlewares(__classPrivateFieldGet(this, _Kernel_PATH, "f"), app_middlewares));
         const router = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/routes.js`)(new Router(__classPrivateFieldGet(this, _Kernel_PATH, "f")));
         const routes = router.getAllRoutes();
         for (let key in routes) {
