@@ -65,7 +65,34 @@ module.exports = class Request extends Message {
      * @return static
      */
     withQueryParams(query) {
+        this._req.query = Object.assign(Object.assign({}, this._req.query), query);
         return this;
+    }
+    /**
+     * Retrieve query string argument.
+     *
+     * @param {string} name Case-insensitive query string name
+     * @return {string | boolean | number}
+     */
+    getQueryParam(name) {
+        return this._req.query[name] || null;
+    }
+    /**
+     * Retrieve request parameters
+     *
+     * @return {object}
+     */
+    getParams() {
+        return this._req.params;
+    }
+    /**
+     * Retrieve a single request parameter
+     *
+     * @param {string} name Case-insensitive parameter name
+     * @return {any}
+     */
+    getParam(name) {
+        return this._req.params[name] || null;
     }
     /**
      * Retrieve normalized file upload data.
@@ -99,13 +126,14 @@ module.exports = class Request extends Message {
     /**
      * Return an instance with the specified body parameters.
      *
-     * @param null|array|object $data The deserialized body data. This will
+     * @param {object} data The deserialized body data. This will
      *     typically be in an array or object.
-     * @return static
+     * @return {this}
      * @throws \InvalidArgumentException if an unsupported argument type is
      *     provided.
      */
     withParsedBody(data) {
+        this._req.body = Object.assign(Object.assign({}, this._req.body), data);
         return this;
     }
     /**
@@ -114,7 +142,7 @@ module.exports = class Request extends Message {
      * @return array Attributes derived from the request.
      */
     getAttributes() {
-        return [];
+        return JSON.parse(JSON.stringify(this._req));
     }
     /**
      * Retrieve a single derived request attribute.
@@ -161,6 +189,8 @@ module.exports = class Request extends Message {
      * @return static
      */
     withoutAttribute(name) {
+        this._req[name] = null;
+        delete this._req[name];
         return this;
     }
     /**
@@ -198,6 +228,7 @@ module.exports = class Request extends Message {
      * @throws \InvalidArgumentException for invalid HTTP methods.
      */
     withMethod(method) {
+        this._req.method = method;
         return this;
     }
     /**
