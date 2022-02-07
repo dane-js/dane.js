@@ -1,6 +1,6 @@
 {
   "name": "dane.js",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "A modern web MVC framework for Node.js",
   "repository": {
     "type": "git",
