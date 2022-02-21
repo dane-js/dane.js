@@ -54,6 +54,12 @@ module.exports = (_a = class BaseController {
                     let pluginConfig = {};
                     if (fs.existsSync(pluginConfigFile)) {
                         pluginConfig = require(pluginConfigFile);
+                        if (typeof pluginConfig === 'function') {
+                            pluginConfig = pluginConfig({
+                                path: this.path,
+                                request: this.request,
+                            });
+                        }
                     }
                     const plugin = require(pluginFile);
                     Object.defineProperties(this, {
