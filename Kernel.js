@@ -26,8 +26,8 @@ var _Kernel_instances, _Kernel_PATH, _Kernel_initializeApp, _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cookieParser = require('cookie-parser');
-const http = require('http');
 const cors = require('cors');
+const fs_1 = __importDefault(require("fs"));
 const Dispatcher = require('./router/Dispatcher');
 const Router = require('./router/Router');
 const Route = require('./router/Route');
@@ -49,7 +49,6 @@ module.exports = (_a = class Kernel {
         }
         init() {
             const app = (0, express_1.default)();
-            const server = http.Server(app);
             const models = Db.initialize(__classPrivateFieldGet(this, _Kernel_PATH, "f"));
             const corsOptions = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/cors`);
             app.use(cors(corsOptions));
@@ -59,7 +58,7 @@ module.exports = (_a = class Kernel {
             app.use(express_1.default.json({ limit: '250mb' }));
             __classPrivateFieldGet(this, _Kernel_instances, "m", _Kernel_initializeApp).call(this, app, models);
             const { port, host } = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/env`);
-            server.listen(port, host, () => __awaiter(this, void 0, void 0, function* () {
+            app.listen(port, host, () => __awaiter(this, void 0, void 0, function* () {
                 yield this.sync(models);
                 console.log(`Le serveur a demarré sur l\'hôte http://${host}:${port}`);
             }));
@@ -80,6 +79,12 @@ module.exports = (_a = class Kernel {
     _Kernel_initializeApp = function _Kernel_initializeApp(app, models) {
         const app_middlewares = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/middlewares.js`)([]);
         app.use(...Route.makeMiddlewares(__classPrivateFieldGet(this, _Kernel_PATH, "f"), app_middlewares));
+        const wsRouterFile = `${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/routes.ws.js`;
+        if (fs_1.default.existsSync(wsRouterFile)) {
+            const expressWs = require('express-ws')(app);
+            const wsRouter = require(wsRouterFile)(express_1.default.Router(), models);
+            app.use(wsRouter.path, wsRouter.router);
+        }
         const router = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/routes.js`)(new Router(__classPrivateFieldGet(this, _Kernel_PATH, "f")));
         const routes = router.getAllRoutes();
         for (let key in routes) {
