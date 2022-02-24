@@ -27,6 +27,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const http = require('http');
 const fs_1 = __importDefault(require("fs"));
 const Dispatcher = require('./router/Dispatcher');
 const Router = require('./router/Router');
@@ -49,6 +50,7 @@ module.exports = (_a = class Kernel {
         }
         init() {
             const app = (0, express_1.default)();
+            const server = http.Server(app);
             const models = Db.initialize(__classPrivateFieldGet(this, _Kernel_PATH, "f"));
             const corsOptions = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/cors`);
             app.use(cors(corsOptions));
@@ -56,9 +58,16 @@ module.exports = (_a = class Kernel {
             app.use('/static', express_1.default.static(__classPrivateFieldGet(this, _Kernel_PATH, "f").STATIC_DIR));
             app.use(express_1.default.urlencoded({ extended: true }));
             app.use(express_1.default.json({ limit: '250mb' }));
-            __classPrivateFieldGet(this, _Kernel_instances, "m", _Kernel_initializeApp).call(this, app, models);
+            const socketFile = `${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/socket.js`;
+            let io = null;
+            if (fs_1.default.existsSync(socketFile)) {
+                const socket = require(socketFile);
+                io = require('socket.io')(server, socket.options || {});
+                io = socket.handler(io, models);
+            }
+            __classPrivateFieldGet(this, _Kernel_instances, "m", _Kernel_initializeApp).call(this, app, models, io);
             const { port, host } = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/env`);
-            app.listen(port, host, () => __awaiter(this, void 0, void 0, function* () {
+            server.listen(port, host, () => __awaiter(this, void 0, void 0, function* () {
                 yield this.sync(models);
                 console.log(`Le serveur a demarré sur l\'hôte http://${host}:${port}`);
             }));
@@ -76,14 +85,11 @@ module.exports = (_a = class Kernel {
     },
     _Kernel_PATH = new WeakMap(),
     _Kernel_instances = new WeakSet(),
-    _Kernel_initializeApp = function _Kernel_initializeApp(app, models) {
+    _Kernel_initializeApp = function _Kernel_initializeApp(app, models, io) {
         const app_middlewares = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/middlewares.js`)([]);
-        app.use(...Route.makeMiddlewares(__classPrivateFieldGet(this, _Kernel_PATH, "f"), app_middlewares));
-        const wsRouterFile = `${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/routes.ws.js`;
-        if (fs_1.default.existsSync(wsRouterFile)) {
-            const expressWs = require('express-ws')(app);
-            const wsRouter = require(wsRouterFile)(express_1.default.Router(), models);
-            app.use(wsRouter.path, wsRouter.router);
+        const middlewares = Route.makeMiddlewares(__classPrivateFieldGet(this, _Kernel_PATH, "f"), app_middlewares);
+        if (middlewares.length) {
+            app.use(...middlewares);
         }
         const router = require(`${__classPrivateFieldGet(this, _Kernel_PATH, "f").CONFIG_DIR}/routes.js`)(new Router(__classPrivateFieldGet(this, _Kernel_PATH, "f")));
         const routes = router.getAllRoutes();
@@ -91,7 +97,7 @@ module.exports = (_a = class Kernel {
             routes[key].forEach(route => {
                 const middlewares = route.getMiddlewares();
                 const runner = function (req, res, next) {
-                    return route.getRunner(models, req, res, next);
+                    return route.getRunner(models, io, req, res, next);
                 };
                 if (key == 'delete') {
                     app.delete(`/${route.getPath()}`, ...middlewares, runner);
@@ -112,7 +118,7 @@ module.exports = (_a = class Kernel {
         }
         const dispatcher = new Dispatcher(__classPrivateFieldGet(this, _Kernel_PATH, "f"), models);
         app.use(function (req, res, next) {
-            return dispatcher.dispatch(req, res, next);
+            return dispatcher.dispatch(io, req, res, next);
         });
     },
     _a);

@@ -30,13 +30,13 @@ module.exports = (_a = class Dispatcher {
             __classPrivateFieldSet(this, _Dispatcher_path, path, "f");
             __classPrivateFieldSet(this, _Dispatcher_models, models, "f");
         }
-        dispatch(req, res, next) {
+        dispatch(io, req, res, next) {
             const URL = req.path;
             if (false === __classPrivateFieldGet(this, _Dispatcher_router, "f").getAutoRoute()) {
                 throw Error('Not routes found for this URL');
             }
             else {
-                return launcher(trim(URL, '/').split('/'), req, res, __classPrivateFieldGet(this, _Dispatcher_path, "f"), __classPrivateFieldGet(this, _Dispatcher_models, "f"), __classPrivateFieldGet(this, _Dispatcher_router, "f"));
+                return launcher(trim(URL, '/').split('/'), req, res, __classPrivateFieldGet(this, _Dispatcher_path, "f"), __classPrivateFieldGet(this, _Dispatcher_models, "f"), io, __classPrivateFieldGet(this, _Dispatcher_router, "f"));
             }
         }
     },

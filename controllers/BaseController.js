@@ -26,14 +26,16 @@ module.exports = (_a = class BaseController {
             this.pij = pij;
             this.request = null;
             this.response = null;
+            this.io = null;
             this.db = {};
             this.repo = {};
             this.path = path;
         }
-        initialize(req, res, models) {
+        initialize(req, res, models, io) {
             return __awaiter(this, void 0, void 0, function* () {
                 this.request = new Request(req, res);
                 this.response = new Response(req, res);
+                this.io = io;
                 __classPrivateFieldGet(this, _BaseController_instances, "m", _BaseController_initDb).call(this, models);
                 __classPrivateFieldGet(this, _BaseController_instances, "m", _BaseController_initPlugins).call(this);
                 __classPrivateFieldGet(this, _BaseController_instances, "m", _BaseController_initRepo).call(this);

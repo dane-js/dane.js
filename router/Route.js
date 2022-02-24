@@ -134,8 +134,8 @@ module.exports = (_a = class Route {
         getMiddlewares() {
             return __classPrivateFieldGet(this, _Route_middlewares, "f");
         }
-        getRunner(models, req, res, next) {
-            return __classPrivateFieldGet(this, _Route_instances, "m", _Route_launch).call(this, models, req, res);
+        getRunner(models, io, req, res, next) {
+            return __classPrivateFieldGet(this, _Route_instances, "m", _Route_launch).call(this, models, io, req, res);
         }
         /**
          * Genere l'url d'une route avec les parametres
@@ -181,12 +181,12 @@ module.exports = (_a = class Route {
         }
         return call_user_func_array([obj, method], params);
     },
-    _Route_launch = function _Route_launch(models, req, res) {
+    _Route_launch = function _Route_launch(models, io, req, res) {
         let params = __classPrivateFieldGet(this, _Route_matches, "f");
         params.push(...[req, res]);
         if (this.callable instanceof Function) {
             return call_user_func_array(this.callable, [req, res]);
         }
-        return launcher(this.callable.split('@'), req, res, __classPrivateFieldGet(this, _Route_PATH, "f"), models);
+        return launcher(this.callable.split('@'), req, res, __classPrivateFieldGet(this, _Route_PATH, "f"), models, io);
     },
     _a);
