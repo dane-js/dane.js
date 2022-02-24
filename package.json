@@ -1,6 +1,6 @@
 {
   "name": "dane.js",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "A modern web MVC framework for Node.js",
   "repository": {
     "type": "git",
@@ -24,6 +24,6 @@
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "php-in-js": "^1.0.1"
+    "php-in-js": "^1.0.2"
   }
 }
