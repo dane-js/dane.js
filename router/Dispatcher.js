@@ -31,11 +31,14 @@ module.exports = (_a = class Dispatcher {
             __classPrivateFieldSet(this, _Dispatcher_models, models, "f");
         }
         dispatch(io, req, res, next) {
-            const URL = req.path;
             if (false === __classPrivateFieldGet(this, _Dispatcher_router, "f").getAutoRoute()) {
                 throw Error('Not routes found for this URL');
             }
             else {
+                let { basePath } = require(`${__classPrivateFieldGet(this, _Dispatcher_path, "f").CONFIG_DIR}/env`);
+                basePath = basePath || '';
+                const regex = new RegExp(`^\/?${basePath}`, 'i');
+                const URL = req.path.replace(regex, '');
                 return launcher(trim(URL, '/').split('/'), req, res, __classPrivateFieldGet(this, _Dispatcher_path, "f"), __classPrivateFieldGet(this, _Dispatcher_models, "f"), io, __classPrivateFieldGet(this, _Dispatcher_router, "f"));
             }
         }
