@@ -253,4 +253,15 @@ module.exports = class Request extends Message {
         preserveHost = preserveHost || false;
         return this;
     }
+    /**
+     * Returns client IP address
+     */
+    clientIp() {
+        const headers = this._req.headers;
+        let ips = (headers['cf-connecting-ip'] ||
+            headers['x-real-ip'] ||
+            headers['x-forwarded-for'] ||
+            this._req.connection.remoteAddress || '').split(',');
+        return ips[0].trim();
+    }
 };
